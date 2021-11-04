@@ -9,22 +9,32 @@ from packet import *
 
 
 def control():
-    path = sys.argv[1]
-    parse_pcap(path)
+    parse_arguments()
+    path = sys.argv[len(sys.argv) - 1]
+    cap = parse_pcap(path)
+    print(cap[0].get_data())
 
-
-def config(path="~/.config/wireshark"):
+def config(path=""):
+    print("Configuring Wireshark.")
+    USER = os.getenv('USER')
+    if path == "":
+        path = '/home/' + USER + '/.config/wireshark'
     directory = os.path.dirname(path)
     if not os.path.exists(directory):
         print('The directory \"' + path + '\" does not exist. Please make sure the directory is correct and try again.')
         quit()
     path += '/profiles/4GLTE'
+    directory = os.path.dirname(path)
+    if os.path.exists(directory):
+        print('Profile 4GLTE already exists. No configuration necessary.')
     os.makedirs(path, exist_ok=True)
+    print('Created profile 4GLTE.')
     config_files = os.listdir('profile')
     for file in config_files:
         copy_path = 'profile/' + file
         print('Copying ' + copy_path + ' to ' + path + '...')
         shutil.copy(copy_path, path)
+    print("Configuration complete.")
 
 
 def parse_arguments():
@@ -35,12 +45,10 @@ def parse_arguments():
             i += 1
             continue
         if sys.argv[i] == '-config' or sys.argv[i] == '-c':
-            print("Configuring Wireshark.")
             if i + 1 < len(sys.argv) and sys.argv[i+1][0] != '-':
                 config(sys.argv[i+1])
             else:
                 config()
-            print("Configuration complete.")
             quit()
         if sys.argv[i] == '-help' or sys.argv[i] == '-h':
             print("""
@@ -53,7 +61,7 @@ def parse_arguments():
             -config [directory]
             Configures Wireshark and tshark correctly for 4G packet analysis.
             The directory provided is the configuration directory for Wireshark.
-            By default, this directory is "~/.config/wireshark".
+            By default, this directory is "/home/$USER/.config/wireshark".
             
             -help
             Displays this help message.
@@ -63,9 +71,16 @@ def parse_arguments():
 
 def parse_pcap(path):
     """Parses .pcap data using PyShark library."""
-    capture = pyshark.FileCapture(path, custom_parameters=['-C', '4GLTE'])
-    print(capture[0])
-
+    raw_capture = pyshark.FileCapture(path, custom_parameters=['-C', '4GLTE'])
+    capture = []
+    for packet in raw_capture:
+        if len(packet.layers) > 2 and vars(packet.layers[2])['_layer_name'] == 'mac-lte':
+            vars(packet.layers[2])['_layer_name'] = 'mac_lte'
+        capture.append(Packet(packet, 0))
+    if len(capture) == 0:
+        print("no good")
+        quit()
+    return capture
 
 if __name__ == '__main__':
     control()
