@@ -1,8 +1,9 @@
 import pyshark
 
 class Packet:
-    def __init__(self, data, analysis):
+    def __init__(self, data, summary, analysis):
         self.data = data
+        self.summary = summary
         self.eval = analysis
 
     def get_data(self):

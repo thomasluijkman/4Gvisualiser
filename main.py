@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+from ltevisualiser import visualiser
 from pprint import pprint
 
 import pyshark
@@ -12,6 +13,8 @@ def control():
     options, parse_options = parse_arguments()
     path = sys.argv[len(sys.argv) - 1]
     cap = parse_pcap(path, parse_options)
+    img = visualiser.Visualiser(cap)
+    img.create_image(0)
 
 
 def config(path=""):
@@ -109,12 +112,16 @@ def parse_arguments():
 
 def parse_pcap(path, options):
     """Parses .pcap data using PyShark library."""
+    pyshark.FileCapture.SUMMARIES_BATCH_SIZE = 4
     raw_capture = pyshark.FileCapture(path, custom_parameters=options)
+    summaries = pyshark.FileCapture(path, custom_parameters=options, only_summaries=True)
+    assert len(raw_capture) == len(summaries)
     capture = []
-    for packet in raw_capture:
+    for packet, summary in zip(raw_capture, summaries):
         if len(packet.layers) > 2 and vars(packet.layers[2])['_layer_name'] == 'mac-lte':
             vars(packet.layers[2])['_layer_name'] = 'mac_lte'
-        capture.append(Packet(packet, 0))
+        sentence = summary.summary_line
+        capture.append(Packet(packet, sentence, 0))
     if len(capture) == 0:
         print("""
         No captures were loaded into the program.
