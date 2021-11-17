@@ -1,5 +1,6 @@
 import cv2.cv2 as cv2
 import numpy as np
+import tkinter as tk
 from PIL import Image
 
 
@@ -11,38 +12,36 @@ class Visualiser:
 
     def __init__(self, data):
         self.data = data
-        self.image = Image.new('RGB', (self.width, self.height), (255, 255, 255))
+        self.window = tk.Tk()
         self.packets_processed = 0
 
     def create_image(self, start=0):
-        imga = np.array(self.image)
-        imga = self.image_skeleton(imga)
+        canvas = tk.Canvas(width=800, height=640)
+        canvas.pack()
+        self.image_skeleton(canvas)
         current_data = self.data[start:start+5]
         for packet in current_data:
-            imga = self.process_packet(imga, packet)
-        self.packets_processed = 0
-        self.image = Image.fromarray(imga)
-        self.image.show(title="This is an image")
+            self.process_packet(canvas, packet)
+        self.window.mainloop()
 
-    def process_packet(self, imga, packet):
+    def process_packet(self, canvas, packet):
         origin_height = 175 + (100 * self.packets_processed)
         self.packets_processed += 1
-        pta = (100, origin_height)
-        ptb = (700, origin_height)
+        xa = 100
+        xb = 700
+        ya = origin_height
+        yb = origin_height
         if packet.data.mac_lte.get('mac-lte.direction') == '1':
-            tmp = pta
-            pta = ptb
-            ptb = tmp
-        imga = cv2.arrowedLine(imga, pta, ptb, (0,0,0), thickness=5, tipLength=0.05)
-        txtsize = cv2.getTextSize(packet.summary, self.font, self.textscale, 2)
-        origin_width = 400 - txtsize[0][0]/2
-        print(origin_width)
-        imga = cv2.putText(imga, packet.summary, (int(origin_width), origin_height - 10), self.font, self.textscale, (0,0,0), thickness=1)
-        return imga
+            dir = tk.FIRST
+        else:
+            dir = tk.LAST
+        canvas.create_line(xa, ya, xb, yb, arrow=dir, width=4)
+        canvas.create_text(400, origin_height - 20, fill='black', font='Arial 11', text=packet.summary)
+        return canvas
 
-    def image_skeleton(self, imga):
-        imga = cv2.line(imga, (100, 100), (100, 600), (0, 0, 0), thickness=10)
-        imga = cv2.line(imga, (700, 100), (700, 600), (0, 0, 0), thickness=10)
-        imga = cv2.putText(imga, 'UE', (80, 90), self.font, 1, (0, 0, 0), thickness=2)
-        imga = cv2.putText(imga, 'eNodeB', (640, 90), self.font, 1, (0, 0, 0), thickness=2)
-        return imga
+    def image_skeleton(self, canvas):
+        canvas.create_line(100, 100, 100, 600, width=10)
+        canvas.create_line(700, 100, 700, 600, width=10)
+        canvas.create_text(100, 80, fill='black', font='Arial 20', text='User Equipment')
+        canvas.create_text(700, 80, fill='black', font='Arial 20', text='eNodeB')
+        return canvas
