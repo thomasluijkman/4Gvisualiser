@@ -2,8 +2,6 @@ import sys
 import os
 import shutil
 from ltevisualiser import visualiser
-from pprint import pprint
-
 import pyshark
 
 from packet import *
@@ -14,10 +12,12 @@ def control():
     path = sys.argv[len(sys.argv) - 1]
     cap = parse_pcap(path, parse_options)
     img = visualiser.Visualiser(cap)
-    img.create_image(0)
+    img.visualise()
 
 
 def config(path=""):
+    """Configures a Wireshark profile such that 4G/LTE packets can be read correctly."""
+
     print("Configuring Wireshark.")
     USER = os.getenv('USER')
     if path == "":

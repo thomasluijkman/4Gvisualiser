@@ -1,10 +1,13 @@
-import pyshark
+from analyser.categoriser import categorise
+
 
 class Packet:
     def __init__(self, data, summary, analysis):
         self.data = data
+        self.full_summary = summary
         self.summary = self.process_summary(summary)
         self.eval = analysis
+        self.category = categorise(data, summary)
 
     def process_summary(self, summary):
         words = summary.split(' ')[2:]
@@ -19,10 +22,4 @@ class Packet:
                 break
         sentence = ' '.join(sentence)
         return sentence
-
-    def get_data(self):
-        return self.data
-
-    def get_eval(self):
-        return self.eval
 
