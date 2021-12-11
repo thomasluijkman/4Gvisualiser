@@ -15,6 +15,9 @@ class Visualiser:
             for category in packet.category:
                 if category not in self.categories:
                     self.categories.append(category)
+        self.categories.sort()
+        self.categories.remove('All')
+        self.categories.insert(0, 'All')
 
     def visualise(self):
         """Creates the visualisation UI for the packet capture."""
@@ -60,6 +63,7 @@ class Visualiser:
         legend_button.pack(side=tk.RIGHT)
 
     def filter_data(self):
+        """Filters data based on selected filter."""
         if self.selected.get() == 'All':
             self.data = self.all_data
         else:
@@ -84,16 +88,26 @@ class Visualiser:
     def show_packet(self, packet):
         """Creates a new window which shows the full packet."""
         # TODO: ADD ANALYSIS RESULTS OF PACKET
+
+        # create window and add scrollbars
         window = tk.Toplevel(self.window)
         horizontal_scroll = tk.Scrollbar(window, orient=tk.HORIZONTAL)
         horizontal_scroll.pack(side=tk.BOTTOM, fill=tk.X)
         vertical_scroll = tk.Scrollbar(window, orient=tk.VERTICAL)
         vertical_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # create text to be shown
         text = tk.Text(window, wrap=tk.NONE, xscrollcommand=horizontal_scroll.set, yscrollcommand=vertical_scroll.set)
-        lines = str(packet.data).split('\n')
+        lines = f"""-------------SHORT DESCRIPTION--------------
+Summary: {packet.full_summary}
+Categories: {packet.category}
+--------------FULL PACKET DATA--------------""".split('\n')
+        lines += str(packet.data).split('\n')
         for line in lines:
             text.insert(tk.END, line + '\n')
         text.pack(fill=tk.BOTH)
+
+        # configure scroll bars and show window
         horizontal_scroll.config(command=text.xview)
         vertical_scroll.config(command=text.yview)
         window.resizable(True, False)
@@ -101,22 +115,18 @@ class Visualiser:
 
     def process_packet(self, canvas, packet, offset):
         """Adds an arrow to the canvas and the summary line of the particular packet."""
-        # TODO: GIVE ARROW AND TEXT DIFFERENT COLOR BASED ON PACKET ANALYSIS RESULTS
         xa = 100
         xb = 700
         if packet.data.mac_lte.get('mac-lte.direction') == '1':
             direction = tk.FIRST
         else:
             direction = tk.LAST
-        if 'Unassigned' in packet.category:
-            colour = 'black'
-        else:
-            colour = 'navy'
-        canvas.create_line(xa, offset, xb, offset, fill=colour, arrow=direction, arrowshape=(20,30,10), width=4)
+        canvas.create_line(xa, offset, xb, offset, fill=packet.get_colour, arrow=direction, arrowshape=(20,30,10), width=4)
         canvas.create_text(400, offset - 20, fill='black', font='Courier 11', text=packet.summary)
         return canvas
 
     def legend(self):
+        """Creates window offering additional explanation about UI concepts."""
         window = tk.Toplevel(self.window)
         horizontal_scroll = tk.Scrollbar(window, orient=tk.HORIZONTAL)
         horizontal_scroll.pack(side=tk.BOTTOM, fill=tk.X)
