@@ -1,6 +1,6 @@
 import tkinter as tk
 from functools import partial
-
+from main import list_categories
 
 class Visualiser:
     def __init__(self, data):
@@ -11,10 +11,7 @@ class Visualiser:
         self.selected = tk.StringVar(self.window)
         self.selected.set('All')
         self.categories = ['All']
-        for packet in self.all_data:
-            for category in packet.category:
-                if category not in self.categories:
-                    self.categories.append(category)
+        self.categories += list_categories(data)
         self.categories.sort()
         self.categories.remove('All')
         self.categories.insert(0, 'All')
@@ -98,11 +95,15 @@ class Visualiser:
 
         # create text to be shown
         text = tk.Text(window, wrap=tk.NONE, xscrollcommand=horizontal_scroll.set, yscrollcommand=vertical_scroll.set)
+        analysis = packet.analysis if not packet.analysis == '' else 'Packet has no warnings or errors.'
         lines = f"""-------------SHORT DESCRIPTION--------------
 Summary: {packet.full_summary}
 Categories: {packet.category}
---------------FULL PACKET DATA--------------""".split('\n')
-        lines += str(packet.data).split('\n')
+Error score: {packet.eval}
+------------------ANALYSIS------------------
+{analysis.rstrip()}
+--------------FULL PACKET DATA--------------
+{packet.data}""".split('\n')
         for line in lines:
             text.insert(tk.END, line + '\n')
         text.pack(fill=tk.BOTH)
@@ -121,7 +122,7 @@ Categories: {packet.category}
             direction = tk.FIRST
         else:
             direction = tk.LAST
-        canvas.create_line(xa, offset, xb, offset, fill=packet.get_colour, arrow=direction, arrowshape=(20,30,10), width=4)
+        canvas.create_line(xa, offset, xb, offset, fill=packet.get_colour(), arrow=direction, arrowshape=(20,30,10), width=4)
         canvas.create_text(400, offset - 20, fill='black', font='Courier 11', text=packet.summary)
         return canvas
 

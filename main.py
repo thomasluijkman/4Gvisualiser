@@ -3,6 +3,7 @@ import os
 import shutil
 from ltevisualiser import visualiser
 import pyshark
+from analyser import analysis
 
 from packet import *
 
@@ -11,6 +12,8 @@ def control():
     options, parse_options = parse_arguments()
     path = sys.argv[len(sys.argv) - 1]
     cap = parse_pcap(path, parse_options)
+    lte_analyser = analysis.Analyser(cap, list_categories(cap))
+    lte_analyser.analyse()
     img = visualiser.Visualiser(cap)
     img.visualise()
 
@@ -108,6 +111,14 @@ def parse_arguments():
             quit()
         i += 1
     return options, parse_options
+
+def list_categories(data):
+    categories = []
+    for packet in data:
+        for category in packet.category:
+            if category not in categories:
+                categories.append(category)
+    return categories
 
 
 def parse_pcap(path, options):
