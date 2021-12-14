@@ -12,11 +12,14 @@ def control():
     options, parse_options = parse_arguments()
     path = sys.argv[len(sys.argv) - 1]
     cap = parse_pcap(path, parse_options)
-    lte_analyser = analysis.Analyser(cap, list_categories(cap))
-    lte_analyser.analyse()
-    img = visualiser.Visualiser(cap)
-    img.visualise()
-
+    if options['analyse']:
+        lte_analyser = analysis.Analyser(cap, list_categories(cap))
+        lte_analyser.analyse()
+    if options['visualise']:
+        img = visualiser.Visualiser(cap)
+        img.visualise()
+    else:
+        print_analysis(cap)
 
 def config(path=""):
     """Configures a Wireshark profile such that 4G/LTE packets can be read correctly."""
@@ -45,13 +48,15 @@ def config(path=""):
 
 def parse_arguments():
     """Parses command line arguments."""
-    options = {}
+    options = {'analyse': True, 'visualise': True}
     parse_options = {'-C': '4GLTE'}
     i = 1
     while i < len(sys.argv):
         if sys.argv[i][0] != '-':
             i += 1
             continue
+        if sys.argv[i] == '-analyse' or sys.argv[i] == '-a':
+            options['visualise'] = False
         if sys.argv[i] == '-config' or sys.argv[i] == '-c':
             if i + 1 < len(sys.argv) and sys.argv[i+1][0] != '-' and not sys.argv[i+1].endswith('.pcap'):
                 config(sys.argv[i+1])
@@ -76,6 +81,8 @@ def parse_arguments():
             else:
                 print('WARNING: Profile option is set, but no profile is provided.')
                 print('Program will be run with default profile name (4GLTE).')
+        if sys.argv[i] == '-visualise' or sys.argv[i] == '-v':
+            options['analyse'] = False
         if sys.argv[i] == '-help' or sys.argv[i] == '-h':
             print("""
             4G visualisation and analysis tool
@@ -84,6 +91,11 @@ def parse_arguments():
             The filename must be a .pcap file.
             
             OPTIONS:
+            -analyse
+            Only analyse the .pcap file, without showing the UI.
+            Analysis results will be shown in the terminal from which
+            this program is run.
+            
             -config <directory>
             Configures Wireshark and tshark correctly for 4G packet analysis.
             The directory provided is the configuration directory for Wireshark.
@@ -107,10 +119,25 @@ def parse_arguments():
             However, since settings might be different, the program might
             not work correctly, and thus it is recommended to use -config
             and work with the default configuration instead.
+            
+            -visualise
+            Only show the UI, without performing packet analysis.
             """)
             quit()
         i += 1
     return options, parse_options
+
+
+def print_analysis(data):
+    for packet in data:
+        if packet.eval != 0 and 'Analysed' in packet.category:
+            packet_id = packet.full_summary.split()[0]
+            print(f'Packet summary: {packet.full_summary}')
+            print(f'------------ANALYSIS RESULTS FOR PACKET {packet_id} START------------')
+            print(packet.analysis.rstrip('\n'))
+            print(f'------------ANALYSIS RESULTS FOR PACKET {packet_id} STOP------------')
+            print('')
+
 
 def list_categories(data):
     categories = []
