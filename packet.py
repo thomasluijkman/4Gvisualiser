@@ -11,6 +11,9 @@ class Packet:
             self.category = categorise(args[0], args[1])
             self.analysis = []
 
+    def __str__(self):
+        return self.full_summary
+
     def process_summary(self, summary):
         """Processes summary to not be longer than 63 characters to fit in the graph."""
         words = summary.split(' ')[2:]
@@ -50,7 +53,9 @@ class Packet:
         if 'Unassigned' not in self.category:
             colour = (0, 0, 128)
         if 'Analysed' in self.category:
-            if self.eval == 0:  # packet has no warnings or errors
+            if self.eval == 0 and len(self.analysis) == 0:  # packet has no warnings or errors
+                colour = (0, 200, 0)
+            elif self.eval == 0 and not len(self.analysis) == 0:
                 colour = (0, 100, 0)
             elif max == 0:  # packet has errors, but no colour gradient will be applied
                 colour = (255, 175, 0)

@@ -1,4 +1,5 @@
 import analyser.smc as smc
+import analyser.identity as identity
 
 
 def filter_dictionary(dictionary, flist):
@@ -30,8 +31,8 @@ class Analyser:
 
     def analyse(self):
         self.get_ue_info()
+        identity.analyse(self.data['Identity Request/Response'], self.ue_info)
         smc.analyse(self.data['Security Mode Command'], self.ue_info)
-
 
     def get_ue_info(self):
         """Get UE info based on attach request packet."""
@@ -51,6 +52,7 @@ class Analyser:
         self.ue_info['security_capabilities'] = filter_dictionary(vars(request)['_all_fields'], ['eea', 'eia', 'uea', 'uia', '.gea'])
         self.ue_info['security_capabilities'] = {k.split('.')[-1]: v for (k, v) in self.ue_info['security_capabilities'].items()}
         pass
+
 
 class MissingUserEquipmentInfoException(Exception):
     def __init__(self):
