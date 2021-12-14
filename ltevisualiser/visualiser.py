@@ -1,6 +1,6 @@
 import tkinter as tk
 from functools import partial
-from main import list_categories
+from ELVis import list_categories
 
 class Visualiser:
     def __init__(self, data):
@@ -95,7 +95,7 @@ class Visualiser:
 
         # create text to be shown
         text = tk.Text(window, wrap=tk.NONE, xscrollcommand=horizontal_scroll.set, yscrollcommand=vertical_scroll.set)
-        analysis = packet.analysis if not packet.analysis == '' else 'Packet has no warnings or errors.'
+        analysis = ''.join(packet.analysis) if not packet.analysis == [] else 'Packet has no warnings or errors.'
         lines = f"""-------------SHORT DESCRIPTION--------------
 Summary: {packet.full_summary}
 Categories: {packet.category}
@@ -111,6 +111,7 @@ Error score: {packet.eval}
         # configure scroll bars and show window
         horizontal_scroll.config(command=text.xview)
         vertical_scroll.config(command=text.yview)
+        window.title(f'Packet: {packet.summary}')
         window.resizable(True, False)
         window.mainloop()
 

@@ -29,17 +29,16 @@ def nas_smc93(packet, packets, ue_info):
     # check for accurate security capabilities (matching from attach request)
     if not packet_info == ue_info['security_capabilities']:
         packet.add_analysis(
-            'WARNING: Security capabilities in NAS security mode command do not match capabilities in attach request.',
-            1)
+            'Security capabilities in NAS security mode command do not match capabilities in attach request.', 1)
 
     # check if UE capable of ciphering algorithm
     if ue_info['security_capabilities'][ca] == '0':
-        packet.add_analysis('ERROR: UE not capable of using NAS chosen ciphering algorithm.', 3)
+        packet.add_analysis('UE not capable of using NAS chosen ciphering algorithm.', 3)
         nas_smc_fail_sent(packet, packets)
 
     # check if UE capable of integrity algorithm
     if ue_info['security_capabilities'][ia] == '0':
-        packet.add_analysis('ERROR: UE not capable of using NAS chosen integrity algorithm.', 3)
+        packet.add_analysis('UE not capable of using NAS chosen integrity algorithm.', 3)
         nas_smc_fail_sent(packet, packets)
 
     # check if ciphering and integrity protection are used
@@ -58,12 +57,12 @@ def rrc_smc_command(packet, packets, ue_info):
 
     # check if UE capable of ciphering algorithm
     if ue_info['security_capabilities'][ca] == '0':
-        packet.add_analysis('ERROR: UE not capable of RRC chosen ciphering algorithm.')
+        packet.add_analysis('UE not capable of RRC chosen ciphering algorithm.', 3)
         rrc_smc_fail_sent(packet, packets)
 
     # check if UE capable of integrity protection algorithm
     if ue_info['security_capabilities'][ia] == '0':
-        packet.add_analysis('ERROR: UE not capable of RRC chosen integrity protection algorithm.')
+        packet.add_analysis('UE not capable of RRC chosen integrity protection algorithm.', 3)
         rrc_smc_fail_sent(packet, packets)
 
     # check if ciphering and integrity protection are used
@@ -90,9 +89,9 @@ def rrc_smc_complete(packet, packets, ue_info):
     # check if PDCP uses configured values
     pdcp_ca, pdcp_ia = smc_algorithms(packet, 'pdcp-lte.security-config.ciphering', 'pdcp-lte.security-config.integrity')
     if ca and not pdcp_ca == ca:
-        packet.add_analysis('WARNING: PDCP does not use configured RRC ciphering algorithm.')
+        packet.add_analysis('PDCP does not use configured RRC ciphering algorithm.')
     if ia and not pdcp_ia == ia:
-        packet.add_analysis('WARNING: PDCP does not use configured RRC integrity protection algorithm.')
+        packet.add_analysis('PDCP does not use configured RRC integrity protection algorithm.')
 
 def smc_algorithms(packet, ca_loc, ia_loc):
     ca = 'eea' + packet.data.layers[2].get(ca_loc)
@@ -110,13 +109,13 @@ def smc_algo_used(packet, ca, ia):
     # check if ciphering is used
     if ca == 'eea0':
         packet.add_analysis(
-            'WARNING: Null ciphering algorithm in use. Data is not encrypted over air interface.\n\t Data could be read by third parties.',
+            'Null ciphering algorithm in use. Data is not encrypted over air interface.\n\t Data could be read by third parties.',
             1)
 
     # check if integrity algorithm is used
     if ia == 'eia0':
         packet.add_analysis(
-            'WARNING: No integrity protection algorithm in use. \n\t Data could be tampered with by third parties.', 2)
+            'No integrity protection algorithm in use. \n\t Data could be tampered with by third parties.', 2)
 
 
 def nas_smc_fail_sent(packet, packets):
@@ -127,7 +126,7 @@ def nas_smc_fail_sent(packet, packets):
         if packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '95':
             failure_known = True
     if not failure_known:
-        packet.add_analysis('\tUE has not sent a failure message for incapability.', 2)
+        packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')
 
 
 def rrc_smc_fail_sent(packet, packets):
@@ -138,4 +137,4 @@ def rrc_smc_fail_sent(packet, packets):
         if packet.data.layers[2].get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
             failure_known = True
     if not failure_known:
-        packet.add_analysis('\tUE has not sent a failure message for incapability.', 2)
+        packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')

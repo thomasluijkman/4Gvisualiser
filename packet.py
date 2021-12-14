@@ -9,7 +9,7 @@ class Packet:
             self.summary = self.process_summary(args[1])
             self.eval = args[2]
             self.category = categorise(args[0], args[1])
-            self.analysis = ""
+            self.analysis = []
 
     def process_summary(self, summary):
         """Processes summary to not be longer than 63 characters to fit in the graph."""
@@ -26,9 +26,22 @@ class Packet:
         sentence = ' '.join(sentence)
         return sentence
 
-    def add_analysis(self, sentence, severity=1):
-        self.analysis += f'{sentence}\n'
+    def add_analysis(self, sentence, severity=1, custom_preamble=None):
         self.eval += severity
+        if custom_preamble:
+            self.analysis.append(f'{custom_preamble}: {sentence}\n')
+        elif severity == 0:
+            self.analysis.append(f'Note: {sentence}\n')
+        elif severity == 1:
+            self.analysis.append(f'Warning: {sentence}\n')
+        elif severity == 2:
+            self.analysis.append(f'WARNING: {sentence}\n')
+        elif severity == 3:
+            self.analysis.append(f'Error: {sentence}\n')
+        elif severity == 4:
+            self.analysis.append(f'ERROR: {sentence}\n')
+
+
 
     def get_colour(self, max=0):
         """Assigns a color to the packet whenever it is required."""
@@ -41,4 +54,4 @@ class Packet:
                 colour = (0, 100, 0)
             elif max == 0:  # packet has errors, but no colour gradient will be applied
                 colour = (255, 175, 0)
-        return '#%02x%02x%02x' % colour
+        return '#%02x%02x%02x' % colour  # based on https://stackoverflow.com/questions/51591456/can-i-use-rgb-in-tkinter/51592104 (accessed 12/12/21)
