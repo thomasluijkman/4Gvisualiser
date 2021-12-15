@@ -1,4 +1,4 @@
-#E-UTRAN LTE Visualiser (ELVis)
+# E-UTRAN LTE Visualiser (ELVis)
 
 The E-UTRAN LTE Visualiser (abbreviated: ELVis) is a tool that allows 
 the user to analyse their LTE packet captures with ease. The aim of 
@@ -20,10 +20,11 @@ can be installed with the following command:
 ```sudo apt install python3 python3-tk```
 
 ELVis also uses Pyshark, a TShark wrapper tool 
-(https://github.com/KimiNewt/pyshark). Pyshark can be installed
-using Pip:
+(https://github.com/KimiNewt/pyshark), and pycrypto, which allows ELVis
+to use encryption functions like AES (https://www.dlitz.net/software/pycrypto/). 
+Pyshark and pycrypto can be installed using Pip:
 
-```pip install pyshark```
+```pip install pyshark pycrypto```
 
 Since Pyshark is a TShark wrapper, Wireshark and TShark both need to be
 installed for TShark to work. These can also be installed with `apt`:
@@ -66,6 +67,10 @@ loaded into the script. This is especially useful when packet captures
 are extremely large. There is also the `-filter` option, which allows
 a display filter string to be put into the program. Only one filter
 string can be loaded in.
+
+There is also the `-sim` option, which loads UE data from a `user_db.csv`
+file as used by srsRAN. This allows for additional power in analysis
+by calculating parameters like authentication values.
 
 In case you need a quick reference, using `-help` brings up a small
 reference of all options that are used in ELVis.
