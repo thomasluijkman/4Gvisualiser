@@ -24,10 +24,12 @@ def split_packets(data, categories):
 
 
 class Analyser:
-    def __init__(self, data, categories):
+    def __init__(self, data, categories, ue_info=None):
         """Class representing the 4G/LTE network analyser."""
+        if ue_info is None:
+            ue_info = {}
         self.data = split_packets(data, categories)
-        self.ue_info = {}
+        self.ue_info = ue_info
 
     def analyse(self):
         self.get_ue_info()
@@ -51,7 +53,6 @@ class Analyser:
         self.ue_info['m-tmsi'] = request.get('nas_eps_emm_m_tmsi')
         self.ue_info['security_capabilities'] = filter_dictionary(vars(request)['_all_fields'], ['eea', 'eia', 'uea', 'uia', '.gea'])
         self.ue_info['security_capabilities'] = {k.split('.')[-1]: v for (k, v) in self.ue_info['security_capabilities'].items()}
-        pass
 
 
 class MissingUserEquipmentInfoException(Exception):

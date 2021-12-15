@@ -13,7 +13,12 @@ def control():
     path = sys.argv[len(sys.argv) - 1]
     cap = parse_pcap(path, parse_options)
     if options['analyse']:
-        lte_analyser = analysis.Analyser(cap, list_categories(cap))
+        if options['sim']:
+            ue_info = {}
+            ue_info['sim_info'] = load_user_db(options['sim'])
+            lte_analyser = analysis.Analyser(cap, list_categories(cap), ue_info)
+        else:
+            lte_analyser = analysis.Analyser(cap, list_categories(cap))
         lte_analyser.analyse()
     if options['visualise']:
         img = visualiser.Visualiser(cap)
@@ -46,9 +51,34 @@ def config(path=""):
     print("Configuration complete.")
 
 
+def load_user_db(filename):
+    """Loads a user_db.csv file according to srsRAN standards, and returns these values in a dictionary."""
+    sim_info = None
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+    for line in lines:
+        if '#' not in line:
+            try:
+                data = line.split(',')[1:]
+                sim_info = {
+                    'auth'      : data[0],
+                    'imsi'      : data[1],
+                    'key'       : data[2],
+                    data[3]     : data[4],
+                    'amf'       : data[5],
+                    'sqn'       : data[6],
+                    'qci'       : data[7],
+                    'ip_alloc'  : data[8]
+                }
+            except Exception:
+                raise IndexError('Something went wrong reading the file. Make sure you entered the correct filename.')
+            break
+    return sim_info
+
+
 def parse_arguments():
     """Parses command line arguments."""
-    options = {'analyse': True, 'visualise': True}
+    options = {'analyse': True, 'visualise': True, 'sim': None}
     parse_options = {'-C': '4GLTE'}
     i = 1
     while i < len(sys.argv):
@@ -81,6 +111,12 @@ def parse_arguments():
             else:
                 print('WARNING: Profile option is set, but no profile is provided.')
                 print('Program will be run with default profile name (4GLTE).')
+        if (sys.argv[i] == '-sim' or sys.argv[i] == '-s') and i + 1 < len(sys.argv):
+            if sys.argv[i+1][0] != '-' and sys.argv[i+1].endswith('.csv'):
+                options['sim'] = sys.argv[i+1]
+            else:
+                print('WARNING: SIM option is set, but no user_db file is provided.')
+                print('Program will not load user_db file.')
         if sys.argv[i] == '-visualise' or sys.argv[i] == '-v':
             options['analyse'] = False
         if sys.argv[i] == '-help' or sys.argv[i] == '-h':
@@ -119,6 +155,12 @@ def parse_arguments():
             However, since settings might be different, the program might
             not work correctly, and thus it is recommended to use -config
             and work with the default configuration instead.
+            
+            -sim <file>
+            If you are using srsRAN, use this command to load the user_db.csv
+            in which you are using to connect to the network. Only the first
+            entry will be parsed, so make sure that this is the entry you used to
+            generate the .pcap files.
             
             -visualise
             Only show the UI, without performing packet analysis.

@@ -26,7 +26,7 @@ def nas_identity_86(packet, ue_info):
         packet.add_analysis('Identity response does not contain queried value by MME.', 3)
 
     # check if response matches known value
-    imsi = safe_dict_get(ue_info, 'imsi')
+    imsi = safe_dict_get(ue_info['sim_info'], 'imsi')
     if imsi and not imsi == packet.data.layers[2].get('e212.imsi'):
         packet.add_analysis('IMSI in response does not match value from SIM configuration.', 1)
         packet.add_analysis('Changing stored value to value read from identity response.', 0)
