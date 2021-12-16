@@ -63,9 +63,9 @@ def load_user_db(filename):
                 sim_info = {
                     'auth'      : data[0],
                     'imsi'      : data[1],
-                    'key'       : data[2],
+                    'key'       : bytes.fromhex(data[2]),
                     data[3]     : data[4],
-                    'amf'       : data[5],
+                    'amf'       : bytes.fromhex(data[5]),
                     'sqn'       : data[6],
                     'qci'       : data[7],
                     'ip_alloc'  : data[8]

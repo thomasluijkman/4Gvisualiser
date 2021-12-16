@@ -1,6 +1,6 @@
 import analyser.smc as smc
 import analyser.identity as identity
-
+import analyser.authentication as authentication
 
 def filter_dictionary(dictionary, flist):
     new_dict = {}
@@ -34,6 +34,7 @@ class Analyser:
     def analyse(self):
         self.get_ue_info()
         identity.analyse(self.data['Identity Request/Response'], self.ue_info)
+        authentication.analyse(self.data['Authentication Procedure'], self.ue_info)
         smc.analyse(self.data['Security Mode Command'], self.ue_info)
 
     def get_ue_info(self):
