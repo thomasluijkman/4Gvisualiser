@@ -4,9 +4,9 @@ from CryptoMobile.Milenage import Milenage
 
 def analyse(packets, ue_info):
     for packet in packets:
-        if packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '82':
+        if packet.data.get('nas_eps.nas_msg_emm_type') == '82':
             nas_authentication_82(packet, ue_info)  # NAS authentication request
-        elif packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '83':
+        elif packet.data.get('nas_eps.nas_msg_emm_type') == '83':
             nas_authentication_83(packet, packets, ue_info)  # NAS authentication response
         packet.category.append('Analysed')
 
@@ -16,14 +16,14 @@ def nas_authentication_82(packet, ue_info):
     ue_info['authentication'] = {}
 
     # check for RAND value
-    rand = ''.join(packet.data.layers[2].get('gsm_a.dtap.rand').split(':'))
+    rand = ''.join(packet.data.get('gsm_a.dtap.rand').split(':'))
     if rand:
         ue_info['authentication']['rand'] = rand
     else:
         packet.add_analysis('RAND value not present.', 3)
 
     # check for AUTN value
-    autn = ''.join(packet.data.layers[2].get('gsm_a.dtap.autn').split(':'))
+    autn = ''.join(packet.data.get('gsm_a.dtap.autn').split(':'))
     if autn:
         ue_info['authentication']['autn'] = autn
     else:
@@ -67,7 +67,7 @@ def nas_authentication_83(packet, packets, ue_info):
                 return
 
             # check if authentication should be successful by comparing RES and XRES
-            res = ''.join(packet.data.layers[2].get('nas_eps.emm.res').split(':'))
+            res = ''.join(packet.data.get('nas_eps.emm.res').split(':'))
             xres = bytes.hex(xres)
             if res != xres:
                 packet.add_analysis(f'RES ({res}) does not match expected value ({xres})', 4)

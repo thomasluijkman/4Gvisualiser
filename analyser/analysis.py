@@ -1,3 +1,5 @@
+from analyser import safe_dict_get
+
 import analyser.smc as smc
 import analyser.identity as identity
 import analyser.authentication as authentication
@@ -33,9 +35,12 @@ class Analyser:
 
     def analyse(self):
         self.get_ue_info()
-        identity.analyse(self.data['Identity Request/Response'], self.ue_info)
-        authentication.analyse(self.data['Authentication Procedure'], self.ue_info)
-        smc.analyse(self.data['Security Mode Command'], self.ue_info)
+        if safe_dict_get(self.data, 'Identity Request/Response'):
+            identity.analyse(self.data['Identity Request/Response'], self.ue_info)
+        if safe_dict_get(self.data, 'Authentication Procedure'):
+            authentication.analyse(self.data['Authentication Procedure'], self.ue_info)
+        if safe_dict_get(self.data, 'Security Mode Command'):
+            smc.analyse(self.data['Security Mode Command'], self.ue_info)
 
     def get_ue_info(self):
         """Get UE info based on attach request packet."""
@@ -45,7 +50,7 @@ class Analyser:
         for (_, category) in self.data.items():
             for packet in category:
                 if 'Attach request' in packet.full_summary:
-                    request = packet.data.layers[2]
+                    request = packet.data
                     break
         if not request:
             raise MissingUserEquipmentInfoException

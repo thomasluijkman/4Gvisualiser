@@ -1,16 +1,16 @@
 def analyse(packets, ue_info):
     for packet in packets:
-        if packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '93':
+        if packet.data.get('nas_eps.nas_msg_emm_type') == '93':
             nas_smc93(packet, packets, ue_info)  # NAS-EPS SecurityModeCommand
-        elif packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '94':
+        elif packet.data.get('nas_eps.nas_msg_emm_type') == '94':
             pass  # NAS-EPS SecurityModeComplete
-        elif packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '95':
+        elif packet.data.get('nas_eps.nas_msg_emm_type') == '95':
             pass  # NAS-EPS SecurityModeFailure
-        elif packet.data.layers[2].get('lte-rrc.securityModeCommand_element') == 'securityModeCommand':
+        elif packet.data.get('lte-rrc.securityModeCommand_element') == 'securityModeCommand':
             rrc_smc_command(packet, packets, ue_info)  # RRC SecurityModeCommand
-        elif packet.data.layers[2].get('lte-rrc.securityModeComplete_element') == 'securityModeComplete':
+        elif packet.data.get('lte-rrc.securityModeComplete_element') == 'securityModeComplete':
             rrc_smc_complete(packet, packets, ue_info)  # RRC SecurityModeComplete
-        elif packet.data.layers[2].get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
+        elif packet.data.get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
             pass  # RRC SecurityModeFailure
         packet.category.append('Analysed')
 
@@ -21,7 +21,7 @@ def nas_smc93(packet, packets, ue_info):
     from analyser.analysis import filter_dictionary
     filter_list = [k for (k, v) in ue_info['security_capabilities'].items()]
     packet_info = {k.split('.')[-1]: v for (k, v) in
-                   filter_dictionary(vars(packet.data.layers[2])['_all_fields'], filter_list).items()}
+                   filter_dictionary(vars(packet.data)['_all_fields'], filter_list).items()}
 
     # gather chosen values
     ca, ia = smc_algorithms(packet, 'nas_eps.emm.toc', 'nas_eps.emm.toi')
@@ -94,10 +94,10 @@ def rrc_smc_complete(packet, packets, ue_info):
         packet.add_analysis('PDCP does not use configured RRC integrity protection algorithm.')
 
 def smc_algorithms(packet, ca_loc, ia_loc):
-    ca = 'eea' + packet.data.layers[2].get(ca_loc)
+    ca = 'eea' + packet.data.get(ca_loc)
     if ca == 'eea1' or ca == 'eea2':
         ca = '128' + ca
-    ia = 'eia' + packet.data.layers[2].get(ia_loc)
+    ia = 'eia' + packet.data.get(ia_loc)
     if ia == 'eia1' or ia == 'eia2':
         ia = '128' + ia
     return ca, ia
@@ -123,7 +123,7 @@ def nas_smc_fail_sent(packet, packets):
     failure_known = False
     # check if SecurityModeFailure message sent
     for packet in packets:
-        if packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == '95':
+        if packet.data.get('nas_eps.nas_msg_emm_type') == '95':
             failure_known = True
     if not failure_known:
         packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')
@@ -134,7 +134,7 @@ def rrc_smc_fail_sent(packet, packets):
     failure_known = False
     # check if SecurityModeFailure message sent
     for packet in packets:
-        if packet.data.layers[2].get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
+        if packet.data.get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
             failure_known = True
     if not failure_known:
         packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')

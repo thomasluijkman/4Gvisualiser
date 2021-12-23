@@ -119,7 +119,7 @@ Error score: {packet.eval}
         """Adds an arrow to the canvas and the summary line of the particular packet."""
         xa = 100
         xb = 700
-        if packet.data.mac_lte.get('mac-lte.direction') == '1':
+        if packet.data.get('mac-lte.direction') == '1':
             direction = tk.FIRST
         else:
             direction = tk.LAST

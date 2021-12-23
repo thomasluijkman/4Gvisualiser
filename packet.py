@@ -2,13 +2,14 @@ from analyser.categoriser import categorise
 
 
 class Packet:
-    def __init__(self, *args):  # data = 0, summary = 1, analysis = 2
-        if len(args) == 3:
-            self.data = args[0]
+    def __init__(self, *args):  # data = 0, summary = 1, raw = 2, analysis = 3
+        if len(args) == 4:
+            self.data = args[0].layers[2]  # for the purpose of this thesis, only care about RRC/MAC/NAS/RLC packets
             self.full_summary = args[1]
             self.summary = self.process_summary(args[1])
-            self.eval = args[2]
-            self.category = categorise(args[0], args[1])
+            self.eval = args[3]
+            self.raw = bytes(args[2].get_raw_packet())
+            self.category = categorise(self)
             self.analysis = []
 
     def __str__(self):

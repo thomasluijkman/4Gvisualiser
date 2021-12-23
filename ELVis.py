@@ -193,15 +193,16 @@ def list_categories(data):
 def parse_pcap(path, options):
     """Parses .pcap data using PyShark library."""
     pyshark.FileCapture.SUMMARIES_BATCH_SIZE = 4
-    raw_capture = pyshark.FileCapture(path, custom_parameters=options)
+    packet_capture = pyshark.FileCapture(path, custom_parameters=options)
     summaries = pyshark.FileCapture(path, custom_parameters=options, only_summaries=True)
-    assert len(raw_capture) == len(summaries)
+    raw_capture = pyshark.FileCapture(path, use_json=True, include_raw=True, custom_parameters=options)
+    assert len(packet_capture) == len(summaries) and len(packet_capture) == len(raw_capture)
     capture = []
-    for packet, summary in zip(raw_capture, summaries):
+    for packet, summary, raw in zip(packet_capture, summaries, raw_capture):
         if len(packet.layers) > 2 and vars(packet.layers[2])['_layer_name'] == 'mac-lte':
             vars(packet.layers[2])['_layer_name'] = 'mac_lte'
         sentence = summary.summary_line
-        capture.append(Packet(packet, sentence, 0))
+        capture.append(Packet(packet, sentence, raw, 0))
     if len(capture) == 0:
         print("""
         No captures were loaded into the program.
