@@ -8,6 +8,6 @@ def safe_dict_get(dictionary, key, default=None):
 
 def get_attach_message(packets, msg_type):
     for packet in packets:
-        if packet.data.layers[2].get('nas_eps.nas_msg_emm_type') == msg_type:
+        if packet.data.get('nas_eps.nas_msg_emm_type') == msg_type:
             return packet
     return None

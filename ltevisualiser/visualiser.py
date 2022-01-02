@@ -32,9 +32,10 @@ class Visualiser:
         i = 0
 
         # Adds packets and "show full packet" buttons
+        max_error = max([packet.eval for packet in self.all_data])
         for packet in current_data:
             origin_height = 175 + (100*i)
-            self.process_packet(canvas, packet, origin_height)
+            self.process_packet(canvas, packet, origin_height, max_error)
             button = tk.Button(text='Show full packet', anchor=tk.NW, command=partial(self.show_packet, packet))
             canvas.create_window(800, origin_height-15, anchor=tk.NW, window=button)
             i += 1
@@ -115,7 +116,7 @@ Error score: {packet.eval}
         window.resizable(True, False)
         window.mainloop()
 
-    def process_packet(self, canvas, packet, offset):
+    def process_packet(self, canvas, packet, offset, max_error):
         """Adds an arrow to the canvas and the summary line of the particular packet."""
         xa = 100
         xb = 700
@@ -123,7 +124,7 @@ Error score: {packet.eval}
             direction = tk.FIRST
         else:
             direction = tk.LAST
-        canvas.create_line(xa, offset, xb, offset, fill=packet.get_colour(), arrow=direction, arrowshape=(20,30,10), width=4)
+        canvas.create_line(xa, offset, xb, offset, fill=packet.get_colour(max_error), arrow=direction, arrowshape=(20,30,10), width=4)
         canvas.create_text(400, offset - 20, fill='black', font='Courier 11', text=packet.summary)
         return canvas
 
@@ -136,17 +137,23 @@ Error score: {packet.eval}
         vertical_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         text = """Explanation of the different symbols and colours used in ELVis:
         
-        * Black arrow indicates the packet is not analysed and not part of any category.
-        * Blue arrow indicates the packet is not analysed, yet is part of a category.
-        * Arrows from left to right are packets travelling from the mobile device to 
-          a mobile network base station.
-        * Arrows from right to left are packets travelling from a mobile network base
-          station to the mobile device.
+* Black arrow indicates the packet is not analysed and not part of any category.
+* Blue arrow indicates the packet is not analysed, yet is part of a category.
+* Light green arrow indicates the packet was analysed and contains no errors.
+* Dark green arrow indicates the packet was analysed and contains no errors,
+  but there were notes that might be interesting to look at.
+* Yellow, orange and red arrows indicate that packet was analysed and an
+  error was found. The closer to red the arrow is, the more severe errors
+  were found in the packet.
+* Arrows from left to right are packets travelling from the mobile device to 
+  a mobile network base station.
+* Arrows from right to left are packets travelling from a mobile network base
+  station to the mobile device.
         """
         text_label = tk.Text(window, wrap=tk.NONE, xscrollcommand=horizontal_scroll.set,
                              yscrollcommand=vertical_scroll.set)
         for line in text.split('\n'):
-            text_label.insert(tk.END, line.lstrip() + '\n')
+            text_label.insert(tk.END, line + '\n')
         text_label.pack(fill=tk.BOTH)
         horizontal_scroll.config(command=text_label.xview)
         vertical_scroll.config(command=text_label.yview)

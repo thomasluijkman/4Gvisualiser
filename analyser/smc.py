@@ -47,6 +47,7 @@ def nas_smc93(packet, packets, ue_info):
     # save ciphering and integrity algorithm
     ue_info['nas_ca'] = ca
     ue_info['nas_ia'] = ia
+    ue_info['locations']['nas_smc'] = int(packet.id) - 1
 
 
 def rrc_smc_command(packet, packets, ue_info):
@@ -71,6 +72,7 @@ def rrc_smc_command(packet, packets, ue_info):
     # save ciphering and integrity algorithm
     ue_info['rrc_ca'] = ca
     ue_info['rrc_ia'] = ia
+    ue_info['locations']['rrc_smc'] = int(packet.id)
 
 def rrc_smc_complete(packet, packets, ue_info):
     """Analyses the RRC SecurityModeComplete message."""
