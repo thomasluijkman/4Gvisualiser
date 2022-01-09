@@ -17,8 +17,8 @@ def categorise(packet):
         categories.append('UE Capability Information')
     if 'Information Transfer' in categories or 'Security Mode Command' in categories or 'UE Capability Information' in categories:
         categories.append('Attach Procedure')
-    if 'Detach' in summary and 'Attach procedure' in categories:
-        categories.remove('Attach procedure')
+    if 'Detach' in summary and 'Attach Procedure' in categories:
+        categories.remove('Attach Procedure')
     if len(categories) == 0:
         categories.append('Unassigned')
     categories = list(dict.fromkeys(categories))

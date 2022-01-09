@@ -5,7 +5,7 @@ def analyse(packets, ue_info):
         elif packet.data.get('nas_eps.nas_msg_emm_type') == '94':
             pass  # NAS-EPS SecurityModeComplete
         elif packet.data.get('nas_eps.nas_msg_emm_type') == '95':
-            pass  # NAS-EPS SecurityModeFailure
+            nas_smc95(packet, packets, ue_info)  # NAS-EPS SecurityModeReject
         elif packet.data.get('lte-rrc.securityModeCommand_element') == 'securityModeCommand':
             rrc_smc_command(packet, packets, ue_info)  # RRC SecurityModeCommand
         elif packet.data.get('lte-rrc.securityModeComplete_element') == 'securityModeComplete':
@@ -13,7 +13,6 @@ def analyse(packets, ue_info):
         elif packet.data.get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
             pass  # RRC SecurityModeFailure
         packet.category.append('Analysed')
-
 
 
 def nas_smc93(packet, packets, ue_info):
@@ -47,8 +46,10 @@ def nas_smc93(packet, packets, ue_info):
     # save ciphering and integrity algorithm
     ue_info['nas_ca'] = ca
     ue_info['nas_ia'] = ia
-    ue_info['locations']['nas_smc'] = int(packet.id) - 1
+    ue_info['locations']['nas_smc'] = int(packet.id)
 
+def nas_smc95(packet, packets, ue_info):
+    pass
 
 def rrc_smc_command(packet, packets, ue_info):
     """Analyses the RRC SecurityModeCommand message."""
@@ -113,6 +114,8 @@ def smc_algo_used(packet, ca, ia):
         packet.add_analysis(
             'Null ciphering algorithm in use. Data is not encrypted over air interface.\n\t Data could be read by third parties.',
             1)
+    else:
+        packet.add_analysis('Because of ciphered data, analysis past this point is limited.', 0)
 
     # check if integrity algorithm is used
     if ia == 'eia0':
@@ -131,7 +134,7 @@ def nas_smc_fail_sent(packet, packets):
         packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')
 
 
-def rrc_smc_fail_sent(packet, packets):
+def rrc_smc_fail_sent(smc_packet, packets):
     """Checks if the packet capture contains a RRC SecurityModeFailure message."""
     failure_known = False
     # check if SecurityModeFailure message sent
@@ -139,4 +142,4 @@ def rrc_smc_fail_sent(packet, packets):
         if packet.data.get('lte-rrc.securityModeFailure_element') == 'securityModeFailure':
             failure_known = True
     if not failure_known:
-        packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')
+        smc_packet.add_analysis('UE has not sent a failure message for incapability.', 2, custom_preamble='\t')

@@ -35,7 +35,10 @@ class Packet:
     def add_analysis(self, sentence, severity=1, custom_preamble=None):
         self.eval += severity
         if custom_preamble:
-            self.analysis.append(f'{custom_preamble}: {sentence}\n')
+            if custom_preamble.isspace():
+                self.analysis.append(f'{custom_preamble} {sentence}\n')
+            else:
+                self.analysis.append(f'{custom_preamble}: {sentence}\n')
         elif severity == 0:
             self.analysis.append(f'Note: {sentence}\n')
         elif severity == 1:
