@@ -1,5 +1,6 @@
 from analyser import safe_dict_get, get_attach_message
 
+
 def analyse(packets, attach_packets, ue_info):
     # check for possible disruption of service because of invalid MAC
     mac_invalid_behaviour(packets, attach_packets, ue_info)
@@ -16,7 +17,6 @@ def analyse(packets, attach_packets, ue_info):
     capability_after_security(attach_packets, ue_info)
 
 
-
 def capability_after_security(attach_packets, ue_info):
     # find UE capability information
     capability = None
@@ -27,7 +27,9 @@ def capability_after_security(attach_packets, ue_info):
         return
 
     if capability.id < ue_info['locations']['rrc_smc']:
-        capability.add_analysis('Capabilities sent before security options were set.\nA malicious actor could perform downgrade attacks or accelerated battery draining.', 2)
+        capability.add_analysis(
+            'Capabilities sent before security options were set.\nA malicious actor could perform downgrade attacks or accelerated battery draining.',
+            2)
 
 
 def correct_rlc_mode(attach_packets):
@@ -37,7 +39,9 @@ def correct_rlc_mode(attach_packets):
         return  # no attach procedure should happen so no need to check for correct RLC mode
     for packet in attach_packets:
         if not packet.data.get('rlc-lte.mode') == '4':
-            packet.add_analysis('RLC not travelling over acknowledged mode. In the attach process, every packet should be acknowledged.', 2)
+            packet.add_analysis(
+                'RLC not travelling over acknowledged mode. In the attach process, every packet should be acknowledged.',
+                2)
 
 
 def correct_bearer_in_attach(attach_packets, ue_info):
@@ -68,7 +72,9 @@ def correct_bearer_in_attach(attach_packets, ue_info):
             if packet.data.get('rlc-lte.channel-type') != '4':
                 packet.add_analysis('Attach message not travelling over SRB. This should always be the case.', 3)
             elif packet.data.get('rlc-lte.channel-id') != '1' and 'Ciphered message' not in packet.full_summary:
-                packet.add_analysis('Attach message not travelling over SRB1. This should always be the case during the attach procedure.', 3)
+                packet.add_analysis(
+                    'Attach message not travelling over SRB1. This should always be the case during the attach procedure.',
+                    3)
 
 
 def correct_security_options(packets, ue_info):
@@ -86,7 +92,6 @@ def correct_security_options(packets, ue_info):
             if not ia == packet_ia:
                 packet.add_analysis('PDCP integrity algorithm does not match configured algorithm.', 2)
             packet.category.append('Analysed')
-
 
 
 def mac_invalid_behaviour(packets, attach_packets, ue_info):
@@ -107,14 +112,17 @@ def mac_invalid_behaviour(packets, attach_packets, ue_info):
     for packet in packets:
         if 'RRCConnectionReconfiguration' in packet.summary:
             complete = True
-    if complete or safe_dict_get(ue_info, 'rrc_ca') != 'eea0':
+    if complete or safe_dict_get(ue_info,
+                                 'rrc_ca') != 'eea0':  # if AS ciphering is enabled, we will not be able to know if attach finished
         return
 
     # find if attach packet is last packet of capture
     last_attach = attach_packets[-1]
     if last_attach == packets[-1]:
         # send warning for possible incomplete file or invalid PDCP MAC
-        last_attach.add_analysis('Attach procedure incomplete.\nIf there are no possible causes listed in this packet, it might be because of an invalid MAC.', 1)
+        last_attach.add_analysis(
+            'Attach procedure incomplete.\nIf there are no possible causes listed in this packet, it might be because of an invalid MAC.',
+            1)
     else:
         # send error for probable invalid PDCP MAC
         last_attach.add_analysis('Attach procedure incomplete.\nThis might be because of an invalid PDCP MAC.', 3)

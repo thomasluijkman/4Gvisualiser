@@ -19,7 +19,7 @@ class Visualiser:
     def visualise(self):
         """Creates the visualisation UI for the packet capture."""
         self.create_image()
-        self.window.title('LTE Packet Visualisation')
+        self.window.title('E-UTRAN LTE Visualisation (ELVis): 4G packet analysis')
         self.window.resizable = (False, False)
         self.window.mainloop()
 
